@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Go gRPC backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      - PORT=50051
+    restart: unless-stopped
+
+  # Envoy proxy: translates gRPC-Web (HTTP/1.1) -> gRPC (HTTP/2)
+  envoy:
+    build:
+      context: ./envoy
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "9901:9901"  # Envoy admin interface
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Flutter web frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      # Envoy proxy URL for docker-compose (uses docker network DNS)
+      - ENVOY_URL=http://envoy:8080
+    depends_on:
+      - envoy
+    restart: unless-stopped
+
+networks:
+  default:
+    name: temp-converter-grpc-network

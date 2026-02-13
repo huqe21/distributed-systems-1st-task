@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: temp-converter-grpc
+  labels:
+    app: frontend
+spec:
+  # NodePort for Ingress (GCE Ingress requires NodePort or LoadBalancer backends)
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
